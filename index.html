@@ -2,78 +2,127 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>연맹 선발 계산기</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>연맹 선발 도구</title>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    textarea { width: 100%; height: 200px; }
-    button { margin-top: 10px; padding: 10px; }
-    table { border-collapse: collapse; margin-top: 20px; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    .selected { background-color: #c8f7c5; }
-    .sub { background-color: #fff3b0; }
-    .out { background-color: #f7c5c5; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #e2e8f0;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #0f172a;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      border-radius: 10px;
+      border: none;
+      padding: 10px;
+      font-size: 14px;
+      margin-top: 10px;
+      background: #1e293b;
+      color: white;
+    }
+
+    button {
+      margin-top: 10px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: #3b82f6;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #2563eb;
+    }
+
+    .result {
+      margin-top: 20px;
+    }
+
+    .card {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+    }
+
+    .selected { background: #16a34a; }
+    .reserve { background: #eab308; color: black; }
+    .excluded { background: #dc2626; }
+
+    .tag {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
   </style>
 </head>
 <body>
-  <h2>연맹 선발 계산기</h2>
-  <p>형식: 캐릭터명,전투력 (한 줄씩 입력)</p>
-  <textarea id="inputData" placeholder="홍길동,12345\n김철수,98765"></textarea>
-  <br>
-  <button onclick="processData()">선발하기</button>
+  <div class="container">
+    <h1>⚔️ 연맹 선발 도구</h1>
+    <p>형식: <b>이름,전투력</b> (한 줄씩 입력)</p>
 
-  <table id="resultTable">
-    <thead>
-      <tr>
-        <th>순위</th>
-        <th>캐릭터명</th>
-        <th>전투력</th>
-        <th>결과</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <textarea id="input" placeholder="홍길동,12345\n김철수,98765"></textarea>
+
+    <button onclick="process()">🚀 선발 실행</button>
+
+    <div class="result" id="result"></div>
+  </div>
 
   <script>
-    function processData() {
-      const input = document.getElementById('inputData').value.trim();
+    function process() {
+      const input = document.getElementById('input').value.trim();
       const lines = input.split('\n');
 
-      let players = lines.map(line => {
+      let data = lines.map(line => {
         const [name, power] = line.split(',');
-        return {
-          name: name.trim(),
-          power: parseInt(power.trim())
-        };
-      });
+        return { name: name.trim(), power: parseInt(power) };
+      }).filter(x => x.name && !isNaN(x.power));
 
-      players.sort((a, b) => b.power - a.power);
+      data.sort((a, b) => b.power - a.power);
 
-      const tbody = document.querySelector('#resultTable tbody');
-      tbody.innerHTML = '';
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '';
 
-      players.forEach((p, index) => {
-        let status = '';
-        let className = '';
+      data.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.classList.add('card');
 
-        if (index < 20) {
-          status = '선발';
-          className = 'selected';
-        } else if (index < 30) {
-          status = '교체';
-          className = 'sub';
+        if (i < 20) {
+          div.classList.add('selected');
+          div.innerHTML = `<span>${i+1}. ${p.name} (${p.power})</span><span class="tag">선발</span>`;
+        } else if (i < 30) {
+          div.classList.add('reserve');
+          div.innerHTML = `<span>${i+1}. ${p.name} (${p.power})</span><span class="tag">교체</span>`;
         } else {
-          status = '탈락';
-          className = 'out';
+          div.classList.add('excluded');
+          div.innerHTML = `<span>${i+1}. ${p.name} (${p.power})</span><span class="tag">탈락</span>`;
         }
 
-        const row = `<tr class="${className}">
-          <td>${index + 1}</td>
-          <td>${p.name}</td>
-          <td>${p.power}</td>
-          <td>${status}</td>
-        </tr>`;
-
-        tbody.innerHTML += row;
+        resultDiv.appendChild(div);
       });
     }
   </script>
