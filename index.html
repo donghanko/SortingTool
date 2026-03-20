@@ -5,150 +5,107 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>연맹 선발 도구</title>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #0f172a, #1e293b);
-      color: #e2e8f0;
-      margin: 0;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: auto;
-      background: #0f172a;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-
-    h1 { text-align: center; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      border: 1px solid #334155;
-      padding: 8px;
-      text-align: center;
-    }
-
-    th { background: #1e293b; }
-
-    input {
-      width: 100%;
-      padding: 6px;
-      background: transparent;
-      border: none;
-      color: white;
-      text-align: center;
-    }
-
-    button {
-      margin-top: 10px;
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      background: #3b82f6;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .result { margin-top: 20px; }
-
-    .card {
-      padding: 10px;
-      margin-bottom: 6px;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
-    }
-
-    .selected { background: #16a34a; }
-    .reserve { background: #eab308; color: black; }
-    .excluded { background: #dc2626; }
+    body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg,#0f172a,#1e293b); color:#e2e8f0; margin:0; padding:20px; }
+    .container { max-width:1000px; margin:auto; background:#0f172a; padding:20px; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.5);}    
+    h1 { text-align:center; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th,td { border:1px solid #334155; padding:8px; text-align:center; }
+    th { background:#1e293b; }
+    input { width:100%; padding:6px; background:transparent; border:none; color:white; text-align:center; }
+    button { margin-top:10px; width:100%; padding:12px; border:none; border-radius:10px; background:#3b82f6; color:white; font-size:16px; cursor:pointer; }
+    .result { margin-top:20px; }
+    .card { padding:10px; margin-bottom:6px; border-radius:8px; display:flex; justify-content:space-between; font-weight:bold; }
+    .selected { background:#16a34a; }
+    .reserve { background:#eab308; color:black; }
+    .excluded { background:#dc2626; }
+    .controls { margin-top:10px; display:flex; gap:10px; }
+    select { flex:1; padding:10px; border-radius:10px; border:none; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>⚔️ 연맹 선발 도구 (엑셀 스타일)</h1>
+<div class="container">
+  <h1>⚔️ 연맹 선발 도구</h1>
 
-    <table id="inputTable">
-      <thead>
-        <tr>
-          <th>캐릭터명</th>
-          <th>전투력</th>
-        </tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
+  <table id="inputTable">
+    <thead>
+      <tr><th>캐릭터명</th><th>전투력</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-    <button onclick="addRow()">➕ 행 추가</button>
-    <button onclick="process()">🚀 선발 실행</button>
+  <button onclick="addRow()">➕ 행 추가</button>
+  <button onclick="process()">🚀 선발 실행</button>
 
-    <div class="result" id="result"></div>
+  <div class="controls">
+    <select id="mode">
+      <option value="canyon">협곡 전장</option>
+      <option value="desert">사막 전장 (추후)</option>
+    </select>
+    <button onclick="exportResult()">📤 Export</button>
   </div>
 
-  <script>
-    function addRow(name = '', power = '') {
-      const tbody = document.querySelector('#inputTable tbody');
-      const tr = document.createElement('tr');
+  <div class="result" id="result"></div>
+</div>
 
-      tr.innerHTML = `
-        <td><input value="${name}" placeholder="이름"></td>
-        <td><input value="${power}" placeholder="전투력" type="number"></td>
-      `;
+<script>
+function addRow(name='', power=''){
+  const tbody=document.querySelector('#inputTable tbody');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input value="${name}"></td><td><input value="${power}" type="number"></td>`;
+  tbody.appendChild(tr);
+}
+for(let i=0;i<10;i++) addRow();
 
-      tbody.appendChild(tr);
-    }
+let lastSelected=[];
 
-    // 기본 10줄 생성
-    for (let i = 0; i < 10; i++) addRow();
+function process(){
+  const rows=document.querySelectorAll('#inputTable tbody tr');
+  let data=[];
 
-    function process() {
-      const rows = document.querySelectorAll('#inputTable tbody tr');
-      let data = [];
+  rows.forEach(r=>{
+    const inputs=r.querySelectorAll('input');
+    const name=inputs[0].value.trim();
+    const power=parseInt(inputs[1].value);
+    if(name && !isNaN(power)) data.push({name,power});
+  });
 
-      rows.forEach(row => {
-        const inputs = row.querySelectorAll('input');
-        const name = inputs[0].value.trim();
-        const power = parseInt(inputs[1].value);
+  data.sort((a,b)=>b.power-a.power);
+  lastSelected = data.slice(0,20);
 
-        if (name && !isNaN(power)) {
-          data.push({ name, power });
-        }
-      });
+  const resultDiv=document.getElementById('result');
+  resultDiv.innerHTML='';
 
-      data.sort((a, b) => b.power - a.power);
+  data.forEach((p,i)=>{
+    const div=document.createElement('div');
+    div.classList.add('card');
 
-      const resultDiv = document.getElementById('result');
-      resultDiv.innerHTML = '';
+    if(i<20){ div.classList.add('selected'); div.innerHTML=`${i+1}. ${p.name} (${p.power}) - 선발`; }
+    else if(i<30){ div.classList.add('reserve'); div.innerHTML=`${i+1}. ${p.name} (${p.power}) - 교체`; }
+    else{ div.classList.add('excluded'); div.innerHTML=`${i+1}. ${p.name} (${p.power}) - 탈락`; }
 
-      data.forEach((p, i) => {
-        const div = document.createElement('div');
-        div.classList.add('card');
+    resultDiv.appendChild(div);
+  });
+}
 
-        if (i < 20) {
-          div.classList.add('selected');
-          div.innerHTML = `${i+1}. ${p.name} (${p.power}) - 선발`;
-        } else if (i < 30) {
-          div.classList.add('reserve');
-          div.innerHTML = `${i+1}. ${p.name} (${p.power}) - 교체`;
-        } else {
-          div.classList.add('excluded');
-          div.innerHTML = `${i+1}. ${p.name} (${p.power}) - 탈락`;
-        }
+function exportResult(){
+  const mode=document.getElementById('mode').value;
 
-        resultDiv.appendChild(div);
-      });
-    }
-  </script>
+  if(lastSelected.length<20){
+    alert('먼저 선발 실행 해주세요');
+    return;
+  }
+
+  if(mode==='canyon'){
+    const top5=lastSelected.slice(0,5).map(x=>x.name).join('\n');
+    const mid5=lastSelected.slice(5,10).map(x=>x.name).join('\n');
+    const rest10=lastSelected.slice(10,20).map(x=>x.name).join('\n');
+
+    const text=`** 협곡전장 **\n\n자유인원\n${top5}\n\n중간 (파워 타워, 바이러스 센터)\n${mid5}\n\n외곽 (중간 건물 제외 나머지)\n${rest10}`;
+
+    navigator.clipboard.writeText(text);
+    alert('복사 완료!\n\n'+text);
+  }
+}
+</script>
 </body>
 </html>
