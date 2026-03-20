@@ -1,27 +1,95 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>연맹 선발 도구</title>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg,#0f172a,#1e293b); color:#e2e8f0; margin:0; padding:20px; }
-    .container { max-width:1000px; margin:auto; background:#0f172a; padding:20px; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.5);}    
-    h1 { text-align:center; }
-    table { width:100%; border-collapse:collapse; margin-top:10px; }
-    th,td { border:1px solid #334155; padding:8px; text-align:center; }
-    th { background:#1e293b; }
-    input { width:100%; padding:6px; background:transparent; border:none; color:white; text-align:center; }
-    button { margin-top:10px; width:100%; padding:12px; border:none; border-radius:10px; background:#3b82f6; color:white; font-size:16px; cursor:pointer; }
-    .result { margin-top:20px; }
-    .card { padding:10px; margin-bottom:6px; border-radius:8px; display:flex; justify-content:space-between; font-weight:bold; }
-    .selected { background:#16a34a; }
-    .reserve { background:#eab308; color:black; }
-    .excluded { background:#dc2626; }
-    .controls { margin-top:10px; display:flex; gap:10px; }
-    select { flex:1; padding:10px; border-radius:10px; border:none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>연맹 선발 도구</title>
+
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color:#e2e8f0;
+  margin:0;
+  padding:20px;
+}
+
+.container {
+  max-width:1000px;
+  margin:auto;
+  background:#0f172a;
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+
+h1 { text-align:center; }
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+
+th,td {
+  border:1px solid #334155;
+  padding:8px;
+  text-align:center;
+}
+
+th { background:#1e293b; }
+
+input {
+  width:100%;
+  padding:6px;
+  background:transparent;
+  border:none;
+  color:white;
+  text-align:center;
+}
+
+button {
+  margin-top:10px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#3b82f6;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+
+.controls {
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+select {
+  flex:1;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+}
+
+.result { margin-top:20px; }
+
+.card {
+  padding:10px;
+  margin-bottom:6px;
+  border-radius:8px;
+  display:flex;
+  justify-content:space-between;
+  font-weight:bold;
+}
+
+.selected { background:#16a34a; }
+.reserve { background:#eab308; color:black; }
+.excluded { background:#dc2626; }
+</style>
 </head>
+
 <body>
 <div class="container">
   <h1>⚔️ 연맹 선발 도구</h1>
@@ -38,8 +106,10 @@
 
   <div class="controls">
     <select id="mode">
-      <option value="canyon">협곡 전장</option>
-      <option value="desert">사막 전장 (추후)</option>
+      <option value="canyonA">협곡 A</option>
+      <option value="canyonB">협곡 B</option>
+      <option value="desertA">사막 A</option>
+      <option value="desertB">사막 B</option>
     </select>
     <button onclick="exportResult()">📤 Export</button>
   </div>
@@ -51,9 +121,13 @@
 function addRow(name='', power=''){
   const tbody=document.querySelector('#inputTable tbody');
   const tr=document.createElement('tr');
-  tr.innerHTML=`<td><input value="${name}"></td><td><input value="${power}" type="number"></td>`;
+  tr.innerHTML = `
+    <td><input value="${name}"></td>
+    <td><input value="${power}" type="number"></td>
+  `;
   tbody.appendChild(tr);
 }
+
 for(let i=0;i<10;i++) addRow();
 
 let lastSelected=[];
@@ -66,6 +140,7 @@ function process(){
     const inputs=r.querySelectorAll('input');
     const name=inputs[0].value.trim();
     const power=parseInt(inputs[1].value);
+
     if(name && !isNaN(power)) data.push({name,power});
   });
 
@@ -79,9 +154,16 @@ function process(){
     const div=document.createElement('div');
     div.classList.add('card');
 
-    if(i<20){ div.classList.add('selected'); div.innerHTML=`${i+1}. ${p.name} (${p.power}) - 선발`; }
-    else if(i<30){ div.classList.add('reserve'); div.innerHTML=`${i+1}. ${p.name} (${p.power}) - 교체`; }
-    else{ div.classList.add('excluded'); div.innerHTML=`${i+1}. ${p.name} (${p.power}) - 탈락`; }
+    if(i<20){
+      div.classList.add('selected');
+      div.innerHTML=`${i+1}. ${p.name} (${p.power}) - 선발`;
+    } else if(i<30){
+      div.classList.add('reserve');
+      div.innerHTML=`${i+1}. ${p.name} (${p.power}) - 교체`;
+    } else {
+      div.classList.add('excluded');
+      div.innerHTML=`${i+1}. ${p.name} (${p.power}) - 탈락`;
+    }
 
     resultDiv.appendChild(div);
   });
@@ -89,23 +171,92 @@ function process(){
 
 function exportResult(){
   const mode=document.getElementById('mode').value;
+  const s = lastSelected;
+  const getNames = arr => arr.filter(Boolean).map(x=>x.name).join('\n');
 
-  if(lastSelected.length<20){
-    alert('먼저 선발 실행 해주세요');
-    return;
+  let header='';
+  if(mode==='desertA') header='** 사막 A 조 **\nKST 20:00\nEST 07:00';
+  if(mode==='desertB') header='** 사막 B 조 **\nKST 10:00\nEST 21:00';
+  if(mode==='canyonA') header='** 협곡 A 조 **\nKST 23:00\nEST 10:00';
+  if(mode==='canyonB') header='** 협곡 B 조 **\nKST 10:00\nEST 21:00';
+
+  let text='';
+
+  if(mode.includes('canyon')){
+    text = `${header}
+
+자유인원
+${getNames(s.slice(0,5))}
+
+중간 (파워 타워, 바이러스 센터)
+${getNames(s.slice(5,10))}
+
+외곽 (중간 건물 제외 나머지)
+${getNames(s.slice(10,20))}`;
   }
 
-  if(mode==='canyon'){
-    const top5=lastSelected.slice(0,5).map(x=>x.name).join('\n');
-    const mid5=lastSelected.slice(5,10).map(x=>x.name).join('\n');
-    const rest10=lastSelected.slice(10,20).map(x=>x.name).join('\n');
+  if(mode.includes('desert')){
+    text = `${header}
 
-    const text=`** 협곡전장 **\n\n자유인원\n${top5}\n\n중간 (파워 타워, 바이러스 센터)\n${mid5}\n\n외곽 (중간 건물 제외 나머지)\n${rest10}`;
+* 자유 인원 (4)
+${getNames(s.slice(0,4))}
 
-    navigator.clipboard.writeText(text);
-    alert('복사 완료!\n\n'+text);
+* 테크 / 정보 센터 (4)
+${getNames(s.slice(4,8))}
+
+* 정련소 1 & 2 (4)
+${getNames(s.slice(8,12))}
+
+* 병원 1 (2)
+${getNames([s[12], s[19]])}
+
+* 병원 2 (2)
+${getNames([s[13], s[18]])}
+
+* 병원 3 (2)
+${getNames([s[14], s[17]])}
+
+* 병원 4 (2)
+${getNames([s[15], s[16]])}`;
   }
+
+  navigator.clipboard.writeText(text);
+  alert('복사 완료!\n\n'+text);
 }
+
+// 방향키 이동
+document.addEventListener('keydown', function(e){
+  const active = document.activeElement;
+  if(active.tagName !== 'INPUT') return;
+
+  const td = active.parentElement;
+  const tr = td.parentElement;
+  const rowIndex = Array.from(tr.parentElement.children).indexOf(tr);
+  const colIndex = Array.from(tr.children).indexOf(td);
+
+  let target;
+
+  if(e.key === 'ArrowRight'){
+    target = tr.children[colIndex+1]?.querySelector('input');
+  }
+  if(e.key === 'ArrowLeft'){
+    target = tr.children[colIndex-1]?.querySelector('input');
+  }
+  if(e.key === 'ArrowDown'){
+    const nextRow = tr.parentElement.children[rowIndex+1];
+    target = nextRow?.children[colIndex]?.querySelector('input');
+  }
+  if(e.key === 'ArrowUp'){
+    const prevRow = tr.parentElement.children[rowIndex-1];
+    target = prevRow?.children[colIndex]?.querySelector('input');
+  }
+
+  if(target){
+    e.preventDefault();
+    target.focus();
+  }
+});
 </script>
+
 </body>
 </html>
