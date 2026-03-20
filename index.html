@@ -87,6 +87,17 @@ select {
 .selected { background:#16a34a; }
 .reserve { background:#eab308; color:black; }
 .excluded { background:#dc2626; }
+
+.export-box {
+  width:100%;
+  height:200px;
+  margin-top:10px;
+  background:#1e293b;
+  color:white;
+  border:none;
+  border-radius:10px;
+  padding:10px;
+}
 </style>
 </head>
 
@@ -115,6 +126,10 @@ select {
   </div>
 
   <div class="result" id="result"></div>
+
+  <h3>📋 Export 결과</h3>
+  <textarea id="exportBox" class="export-box"></textarea>
+  <button onclick="copyExport()">복사하기</button>
 </div>
 
 <script>
@@ -220,8 +235,13 @@ ${getNames([s[14], s[17]])}
 ${getNames([s[15], s[16]])}`;
   }
 
-  navigator.clipboard.writeText(text);
-  alert('복사 완료!\n\n'+text);
+  document.getElementById('exportBox').value = text;
+}
+
+function copyExport(){
+  const box = document.getElementById('exportBox');
+  box.select();
+  document.execCommand('copy');
 }
 
 // 방향키 이동
